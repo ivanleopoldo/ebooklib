@@ -303,9 +303,6 @@ class EpubHtml(EpubItem):
         >>> add_link(href='styles.css', rel='stylesheet', type='text/css')
         """
         self.links.append(kwgs)
-        if kwgs.get('type') == 'text/javascript':
-            if 'scripted' not in self.properties:
-                self.properties.append('scripted')
 
     def get_links(self):
         """
@@ -426,7 +423,6 @@ class EpubHtml(EpubItem):
         _body = etree.SubElement(tree_root, 'body')
         if self.direction:
             _body.set('dir', self.direction)
-            tree_root.set('dir', self.direction)
 
         body = html_tree.find('body')
         if body is not None:
@@ -734,8 +730,8 @@ class EpubBook(object):
                 item.id = 'image_%d' % self._id_image
                 self._id_image += 1
             else:
-                item.id = 'static_%d' % self._id_static
-                self._id_static += 1
+                item.id = 'static_%d' % self._id_image
+                self._id_image += 1
 
         item.book = self
         self.items.append(item)
@@ -1122,12 +1118,15 @@ class EpubWriter(object):
         nav_dir_name = os.path.dirname(item.file_name)
 
         head = etree.SubElement(root, 'head')
+        style = etree.SubElement(head, 'style')
+        style.text = """li, ol { list-style: none; }"""
+
         title = etree.SubElement(head, 'title')
         title.text = self.book.title
 
         # for now this just handles css files and ignores others
         for _link in item.links:
-            _lnk = etree.SubElement(head, 'link', {
+            _link = etree.SubElement(head, 'link', {
                 'href': _link.get('href', ''), 'rel': 'stylesheet', 'type': 'text/css'
             })
 
@@ -1139,7 +1138,7 @@ class EpubWriter(object):
         })
 
         content_title = etree.SubElement(nav, 'h2')
-        content_title.text = self.book.title
+        content_title.text = "Table of Contents"
 
         def _create_section(itm, items):
             ol = etree.SubElement(itm, 'ol')
